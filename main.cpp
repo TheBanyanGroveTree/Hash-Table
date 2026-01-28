@@ -5,7 +5,7 @@
  */
 
 #include <iostream>
-#include <cstring>
+#include <string>
 
 using namespace std;
 
@@ -13,42 +13,41 @@ using namespace std;
 
 int main() {
   // define const var for commands
-  const char ADD[] = "ADD";
-  const char PRINT[] = "PRINT";
-  const char DELETE[] = "DELETE";
-  const char QUIT[] = "QUIT";
+  const string ADD = "ADD";
+  const string PRINT = "PRINT";
+  const string DELETE = "DELETE";
+  const string QUIT = "QUIT";
 
-  // declare char arr for user input
-  const int INPUT_LENGTH = 81;
-  char userCommand[INPUT_LENGTH];
+  // declare str for user input
+  string userCommand = "";
 
   // continue prompting user for input until QUIT command
   bool keepModifying = true;
   while (keepModifying) {
     // read in user input
     cout << "Enter a command (ADD, PRINT, DELETE, QUIT): ";
-    cin.getline(userCommand, INPUT_LENGTH);
+    getline(cin, userCommand);
 
     // convert input to uppercase for comparison
-    for (int i = 0; i < strlen(userCommand); i++) {
+    for (int i = 0; i < userCommand.size(); i++) {
       userCommand[i] = toupper(userCommand[i]);
     }
     
     // validate input
-    if ((strcmp(userCommand, ADD) != 0) &&
-	(strcmp(userCommand, PRINT) != 0) &&
-	(strcmp(userCommand, DELETE) != 0) &&
-	(strcmp(userCommand, QUIT) != 0)) {
+    if ((userCommand.compare(ADD) != 0) &&
+	(userCommand.compare(PRINT) != 0) &&
+	(userCommand.compare(DELETE) != 0) &&
+	(userCommand.compare(QUIT) != 0)) {
       cout << "Please input ADD, PRINT, DELETE, or QUIT." << endl;
     } else {
       // call appropriate method or exit program
-      if (strcmp(userCommand, ADD) == 0) {
+      if (userCommand.compare(ADD) == 0) {
 	
-      } else if (strcmp(userCommand, PRINT) == 0) {
+      } else if (userCommand.compare(PRINT) == 0) {
 	
-      } else if (strcmp(userCommand, DELETE) == 0) {
+      } else if (userCommand.compare(DELETE) == 0) {
 	
-      } else if (strcmp(userCommand, QUIT) == 0){
+      } else if (userCommand.compare(QUIT) == 0){
 	keepModifying = false;
       }
     }
