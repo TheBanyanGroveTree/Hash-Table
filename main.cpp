@@ -1,17 +1,25 @@
 /**
-   Description: Implement Student List using a hash table.
+   Description: Implement Student List using a hash table with the addition
+   of a random student generator.
    Author: Aahana Sapra
    Date: 2/15/2026
  */
+
 
 #include <iostream>
 #include <string>
 #include <limits>
 #include <ios>
 #include <iomanip>
+#include <fstream>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
 #include "Node.h"
 
+
 using namespace std;
+
 
 // define hashTable struct
 struct hashTable {
@@ -20,11 +28,14 @@ struct hashTable {
   Node** arr; // array of Node ptr
 };
 
+
 // define function prototypes
 void initializeHashTable(hashTable*, const int&);
-int hashFunction(hashTable*, const string&); // pass by ref for read-only
+int hashFunction(hashTable*, int); // pass strings by ref for read-only
 void addStudent(hashTable*&);
-void insert(hashTable*&, const string&, Student*);
+void insert(hashTable*&, int, Student*);
+void randomGenerator(hashTable*&, vector<string>&, vector<string>&);
+vector<string> readFile(vector<string>&, const string&);
 void printHashTable(hashTable*);
 void printLinkedList(Node* head);
 void deleteStudentHashTable(hashTable*&);
@@ -32,14 +43,30 @@ Node* deleteStudentLinkedList(Node*, int);
 void quitHashTable(hashTable*, bool&);
 void quitLinkedList(Node*);
 
+
 int main() {
   // initialize hash table
   hashTable* table = new hashTable();
   const int TABLE_SIZE = 100;
   initializeHashTable(table, TABLE_SIZE);
+
+  // read in names from .txt files
+  vector<string> firstNames;
+  firstNames = readFile(firstNames, "firstNames.txt");
+  vector<string> lastNames;
+  lastNames = readFile(lastNames, "lastNames.txt");
+
+  /*
+  for (int i = 0; i < firstNames.size(); i++) {
+    cout << firstNames[i] << endl;
+  }
+  */
+
+  srand(time(0)); // seed random number generator
   
   // define const var for commands
   const string ADD = "ADD";
+  const string RANDOM = "RANDOM";
   const string PRINT = "PRINT";
   const string DELETE = "DELETE";
   const string QUIT = "QUIT";
@@ -51,7 +78,7 @@ int main() {
   bool keepModifying = true;
   while (keepModifying) {
     // read in user input
-    cout << "Enter a command (ADD, PRINT, DELETE, QUIT): ";
+    cout << "Enter a command (ADD, RANDOM, PRINT, DELETE, QUIT): ";
     getline(cin, userCommand);
 
     // convert input to uppercase for comparison
@@ -61,14 +88,17 @@ int main() {
     
     // validate input
     if ((userCommand.compare(ADD) != 0) &&
+	(userCommand.compare(RANDOM) != 0) &&
 	(userCommand.compare(PRINT) != 0) &&
 	(userCommand.compare(DELETE) != 0) &&
 	(userCommand.compare(QUIT) != 0)) {
-      cout << "Please input ADD, PRINT, DELETE, or QUIT." << endl;
+      cout << "Please input ADD, RANDOM, PRINT, DELETE, or QUIT." << endl;
     } else {
       // call appropriate method or exit program
       if (userCommand.compare(ADD) == 0) {
 	addStudent(table);
+      } else if (userCommand.compare(RANDOM) == 0) {
+	randomGenerator(table, firstNames, lastNames);
       } else if (userCommand.compare(PRINT) == 0) {
 	printHashTable(table);
       } else if (userCommand.compare(DELETE) == 0) {
@@ -82,6 +112,7 @@ int main() {
   return 0;
 }
 
+
 // create new hash table
 void initializeHashTable(hashTable* table, const int& TABLE_SIZE) {
   table->size = TABLE_SIZE;
@@ -90,17 +121,21 @@ void initializeHashTable(hashTable* table, const int& TABLE_SIZE) {
   table->arr = new Node*[table->size]();
 }
 
+
 // implement hashing function (mod) and return bucket index for table
-int hashFunction(hashTable* table, const string& key) {
+int hashFunction(hashTable* table, int id) {
+  /*
   int sum = 0;
-  int bucketIndex = 0;
   for (int i = 0; i < key.length(); i++) {
     sum += static_cast<int>(key[i]);
   }
+  */
 
-  bucketIndex = sum % table->size;
+  int bucketIndex = 0;
+  bucketIndex = id % table->size;
   return bucketIndex;
 }
+
 
 // create new student entry
 void addStudent(hashTable*& table) {
@@ -126,13 +161,13 @@ void addStudent(hashTable*& table) {
   // create new Student
   Student* newStudent = new Student(firstName, lastName, id, gpa);
 
-  // create new Node and insert into hash table
-  // key = student last name
-  insert(table, newStudent->getLastName(), newStudent);
+  // create new Node and insert into hash table where key is id
+  insert(table, newStudent->getID(), newStudent);
 }
 
+
 // insert new entry into hash table
-void insert(hashTable*& table, const string& key, Student* newStudent) {
+void insert(hashTable*& table, int key, Student* newStudent) {
   // determine bucket index for give key-val pair
   int bucketIndex = hashFunction(table, key);
 
@@ -153,12 +188,68 @@ void insert(hashTable*& table, const string& key, Student* newStudent) {
   // TODO: add check for rehashing
 }
 
+
+// randomly generate students
+void randomGenerator(hashTable*& table, vector<string>& firstNames,
+		     vector<string>& lastNames) {
+  // prompt user for number of students to generate
+  int numStudents = 0;
+  cout << "Enter the number of students to generate: ";
+  cin >> numStudents;
+  cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+  // generate designated number of students
+  int randomFNI = 0;
+  string firstName = "";
+  int randomLNI = 0;
+  string lastName = "";
+  int currID = 400000;
+  double randomGPA = 0.0;
+  for (int i = 0; i < numStudents; i++) {
+    // generate random values
+    randomFNI = rand() % firstNames.size();
+    firstName = firstNames[randomFNI];
+    randomLNI = rand() % lastNames.size();
+    lastName = lastNames[randomLNI];
+    randomGPA = ((double)rand() / RAND_MAX) * 4.0;
+
+    // create new Student
+    Student* newStudent = new Student(firstName, lastName, currID, randomGPA);
+
+    // create new Node and insert into hash table
+    insert(table, newStudent->getID(), newStudent);
+
+    // increment ID
+    currID++;
+  }
+  
+}
+
+
+// read .txt files
+vector<string> readFile(vector<string>& vec, const string& fileName) {
+  // read from given file
+  ifstream file(fileName);
+
+  // read file line by line
+  string name = "";
+  while (getline(file, name)) {
+    vec.push_back(name);
+  }
+
+  file.close();
+
+  return vec;
+}
+
+
 // print entries stored in hash table
 void printHashTable(hashTable* table) {
   for (int i = 0; i < table->size; i++) {
     printLinkedList(table->arr[i]);
   }
 }
+
 
 // print entries stored in linked list recursively
 void printLinkedList(Node* head) {
@@ -175,6 +266,7 @@ void printLinkedList(Node* head) {
   printLinkedList(head->getNext());
 }
 
+
 // delete student with corresponding ID from hash table
 void deleteStudentHashTable(hashTable*& table) {
   // prompt user for ID to delete
@@ -188,6 +280,7 @@ void deleteStudentHashTable(hashTable*& table) {
     table->arr[i] = deleteStudentLinkedList(table->arr[i], userID);
   }
 }
+
 
 // delete student with corresponding ID from linked list recursively
 Node* deleteStudentLinkedList(Node* head, int id) {
@@ -208,6 +301,7 @@ Node* deleteStudentLinkedList(Node* head, int id) {
   return head;
 }
 
+
 // delete hash table and change updating status
 void quitHashTable(hashTable* table, bool& keepModifying) {
   for (int i = 0; i < table->size; i++) {
@@ -216,6 +310,7 @@ void quitHashTable(hashTable* table, bool& keepModifying) {
 
   keepModifying = false;
 }
+
 
 // delete linked list recursively
 void quitLinkedList(Node* head) {
