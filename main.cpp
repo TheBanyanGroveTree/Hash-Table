@@ -29,7 +29,8 @@ void printHashTable(hashTable*);
 void printLinkedList(Node* head);
 void deleteStudentHashTable(hashTable*&);
 Node* deleteStudentLinkedList(Node*, int);
-void quit();
+void quitHashTable(hashTable*, bool&);
+void quitLinkedList(Node*);
 
 int main() {
   // initialize hash table
@@ -73,7 +74,7 @@ int main() {
       } else if (userCommand.compare(DELETE) == 0) {
 	deleteStudentHashTable(table);
       } else if (userCommand.compare(QUIT) == 0){
-	keepModifying = false;
+	quitHashTable(table, keepModifying);
       }
     }
   }
@@ -208,6 +209,22 @@ Node* deleteStudentLinkedList(Node* head, int id) {
 }
 
 // delete hash table and change updating status
-void quit() {
+void quitHashTable(hashTable* table, bool& keepModifying) {
+  for (int i = 0; i < table->size; i++) {
+    quitLinkedList(table->arr[i]);
+  }
 
+  keepModifying = false;
+}
+
+// delete linked list recursively
+void quitLinkedList(Node* head) {
+  // base case: empty list
+  if (head == NULL) {
+    return;
+  }
+
+  // recursive call
+  quitLinkedList(head->getNext());
+  delete head; // delete current node
 }
