@@ -21,7 +21,7 @@
 using namespace std;
 
 
-// define hashTable struct
+// Define hashTable struct
 struct hashTable {
   int size; // number of elements it can hold
   int count; // current number of elements
@@ -29,11 +29,13 @@ struct hashTable {
 };
 
 
-// define function prototypes
-void initializeHashTable(hashTable*, const int&);
+// Define function prototypes
+void initializeHashTable(hashTable*, int);
 int hashFunction(hashTable*, int); // pass strings by ref for read-only
 void addStudent(hashTable*&);
 void insert(hashTable*&, int, Student*);
+void rehash(hashTable*&);
+int countNodes(Node* head);
 void randomGenerator(hashTable*&, vector<string>&, vector<string>&);
 vector<string> readFile(vector<string>&, const string&);
 void printHashTable(hashTable*);
@@ -45,12 +47,12 @@ void quitLinkedList(Node*);
 
 
 int main() {
-  // initialize hash table
+  // Initialize hash table
   hashTable* table = new hashTable();
-  const int TABLE_SIZE = 100;
-  initializeHashTable(table, TABLE_SIZE);
+  int tableSize = 100;
+  initializeHashTable(table, tableSize);
 
-  // read in names from .txt files
+  // Read in names from .txt files
   vector<string> firstNames;
   firstNames = readFile(firstNames, "firstNames.txt");
   vector<string> lastNames;
@@ -62,19 +64,19 @@ int main() {
   }
   */
 
-  srand(time(0)); // seed random number generator
+  srand(time(0)); // Seed random number generator
   
-  // define const var for commands
+  // Define const var for commands
   const string ADD = "ADD";
   const string RANDOM = "RANDOM";
   const string PRINT = "PRINT";
   const string DELETE = "DELETE";
   const string QUIT = "QUIT";
 
-  // declare str for user input
+  // Declare str for user input
   string userCommand = "";
 
-  // continue prompting user for input until QUIT command
+  // Continue prompting user for input until QUIT command
   bool keepModifying = true;
   while (keepModifying) {
     // read in user input
@@ -113,16 +115,16 @@ int main() {
 }
 
 
-// create new hash table
-void initializeHashTable(hashTable* table, const int& TABLE_SIZE) {
-  table->size = TABLE_SIZE;
+// Create new hash table and initialize struct vals
+void initializeHashTable(hashTable* table, int tableSize) {
+  table->size = tableSize;
   table->count = 0;
   // dynamically allocate memory and initialize to NULL 
   table->arr = new Node*[table->size]();
 }
 
 
-// implement hashing function (mod) and return bucket index for table
+// Implement hashing function (mod) and return bucket index for table
 int hashFunction(hashTable* table, int id) {
   /*
   int sum = 0;
@@ -131,15 +133,15 @@ int hashFunction(hashTable* table, int id) {
   }
   */
 
-  int bucketIndex = 0;
-  bucketIndex = id % table->size;
-  return bucketIndex;
+  return (id % table->size);
 }
 
 
-// create new student entry
+// Create new student entry
 void addStudent(hashTable*& table) {
-  string firstName, lastName = "";
+  // initialize input vars
+  string firstName = "";
+  string lastName = "";
   int id = 0;
   double gpa = 0.0;
 
@@ -166,9 +168,9 @@ void addStudent(hashTable*& table) {
 }
 
 
-// insert new entry into hash table
+// Insert new entry into hash table
 void insert(hashTable*& table, int key, Student* newStudent) {
-  // determine bucket index for give key-val pair
+  // determine bucket index for given key
   int bucketIndex = hashFunction(table, key);
 
   // create new Node
@@ -180,16 +182,55 @@ void insert(hashTable*& table, int key, Student* newStudent) {
   }
   // COLLISION: full bucket index
   else {
+    // check for rehash
+    if (countNodes(table->arr[bucketIndex]) == 3) {
+      rehash(table);
+    }
+    
     // new Node becomes new head that points to old head (NO traversal)
     newNode->setNext(table->arr[bucketIndex]);
     table->arr[bucketIndex] = newNode;
   }
-  
-  // TODO: add check for rehashing
 }
 
 
-// randomly generate students
+// Rehash table if more than 3 collisions
+void rehash(hashTable*& table) {
+  // save old information
+  int oldSize = table->size;
+  Node** oldArr = table-> arr;
+
+  // double size and reinitialize hash table
+  int newSize = oldSize * 2;
+  initializeHashTable(table, newSize);
+  
+  // re-insert old nodes iteratively (more common)
+  for (int i = 0; i < oldSize; i++) {
+    Node* head = oldArr[i];
+    while (head != NULL) {
+      Node* nextNode = head->getNext(); // save next node
+      head->setNext(NULL);
+      insert(table, head->getStudent()->getID(), head->getStudent());
+      head = nextNode;
+    }
+  }
+
+  delete[] oldArr; // delete array ptr
+}
+
+
+// Cound nodes in linked list
+int countNodes(Node* head) {
+  int count = 0;
+  while (head != NULL) {
+    count++;
+    head = head->getNext();
+  }
+
+  return count;
+}
+
+// Randomly generate students
 void randomGenerator(hashTable*& table, vector<string>& firstNames,
 		     vector<string>& lastNames) {
   // prompt user for number of students to generate
@@ -226,7 +267,7 @@ void randomGenerator(hashTable*& table, vector<string>& firstNames,
 }
 
 
-// read .txt files
+// Read .txt file and save info into vector
 vector<string> readFile(vector<string>& vec, const string& fileName) {
   // read from given file
   ifstream file(fileName);
@@ -243,7 +284,7 @@ vector<string> readFile(vector<string>& vec, const string& fileName) {
 }
 
 
-// print entries stored in hash table
+// Print entries stored in hash table
 void printHashTable(hashTable* table) {
   for (int i = 0; i < table->size; i++) {
     printLinkedList(table->arr[i]);
@@ -251,7 +292,7 @@ void printHashTable(hashTable* table) {
 }
 
 
-// print entries stored in linked list recursively
+// Print entries stored in linked list recursively
 void printLinkedList(Node* head) {
   // base case: reached end of list
   if (head == NULL) {
@@ -267,7 +308,7 @@ void printLinkedList(Node* head) {
 }
 
 
-// delete student with corresponding ID from hash table
+// Delete student with corresponding ID from hash table
 void deleteStudentHashTable(hashTable*& table) {
   // prompt user for ID to delete
   int userID = 0;
@@ -282,7 +323,7 @@ void deleteStudentHashTable(hashTable*& table) {
 }
 
 
-// delete student with corresponding ID from linked list recursively
+// Delete student with corresponding ID from linked list recursively
 Node* deleteStudentLinkedList(Node* head, int id) {
   // base case 1: empty list
   if (head == NULL) {
@@ -302,7 +343,7 @@ Node* deleteStudentLinkedList(Node* head, int id) {
 }
 
 
-// delete hash table and change updating status
+// Delete hash table and change updating status
 void quitHashTable(hashTable* table, bool& keepModifying) {
   for (int i = 0; i < table->size; i++) {
     quitLinkedList(table->arr[i]);
@@ -312,7 +353,7 @@ void quitHashTable(hashTable* table, bool& keepModifying) {
 }
 
 
-// delete linked list recursively
+// Delete linked list recursively
 void quitLinkedList(Node* head) {
   // base case: empty list
   if (head == NULL) {
