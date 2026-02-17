@@ -8,6 +8,7 @@
 #include <string>
 #include <limits>
 #include <ios>
+#include <iomanip>
 #include "Node.h"
 
 using namespace std;
@@ -24,8 +25,10 @@ void initializeHashTable(hashTable*, const int&);
 int hashFunction(hashTable*, const string&); // pass by ref for read-only
 void addStudent(hashTable*&);
 void insert(hashTable*&, const string&, Student*);
-void printStudentInfo();
-void deleteStudent();
+void printHashTable(hashTable*);
+void printLinkedList(Node* head);
+void deleteStudentHashTable(hashTable*&);
+Node* deleteStudentLinkedList(Node*, int);
 void quit();
 
 int main() {
@@ -66,9 +69,9 @@ int main() {
       if (userCommand.compare(ADD) == 0) {
 	addStudent(table);
       } else if (userCommand.compare(PRINT) == 0) {
-	
+	printHashTable(table);
       } else if (userCommand.compare(DELETE) == 0) {
-	
+	deleteStudentHashTable(table);
       } else if (userCommand.compare(QUIT) == 0){
 	keepModifying = false;
       }
@@ -88,7 +91,8 @@ void initializeHashTable(hashTable* table, const int& TABLE_SIZE) {
 
 // implement hashing function (mod) and return bucket index for table
 int hashFunction(hashTable* table, const string& key) {
-  int sum, bucketIndex = 0;
+  int sum = 0;
+  int bucketIndex = 0;
   for (int i = 0; i < key.length(); i++) {
     sum += static_cast<int>(key[i]);
   }
@@ -149,13 +153,58 @@ void insert(hashTable*& table, const string& key, Student* newStudent) {
 }
 
 // print entries stored in hash table
-void printStudentInfo() {
-
+void printHashTable(hashTable* table) {
+  for (int i = 0; i < table->size; i++) {
+    printLinkedList(table->arr[i]);
+  }
 }
 
-// delete student with corresponding ID from linked list
-void deleteStudent() {
+// print entries stored in linked list recursively
+void printLinkedList(Node* head) {
+  // base case: reached end of list
+  if (head == NULL) {
+    return;
+  }
 
+  // recursive call
+  cout << head->getStudent()->getFirstName() << ' '
+       << head->getStudent()->getLastName() << ", "
+       << head->getStudent()->getID() << ", "
+       << fixed << setprecision(2) << head->getStudent()->getGPA() << endl;
+  printLinkedList(head->getNext());
+}
+
+// delete student with corresponding ID from hash table
+void deleteStudentHashTable(hashTable*& table) {
+  // prompt user for ID to delete
+  int userID = 0;
+  cout << "Enter the student's ID: ";
+  cin >> userID;
+  cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+  // delete student from linked list
+  for (int i = 0; i < table->size; i++) {
+    table->arr[i] = deleteStudentLinkedList(table->arr[i], userID);
+  }
+}
+
+// delete student with corresponding ID from linked list recursively
+Node* deleteStudentLinkedList(Node* head, int id) {
+  // base case 1: empty list
+  if (head == NULL) {
+    return NULL;
+  }
+
+  // base case 2: reached node to delete
+  if (head->getStudent()->getID() == id) {
+    Node* next = head->getNext();
+    delete head;
+    return next;
+  }
+  
+  // recursive call
+  head->setNext(deleteStudentLinkedList(head->getNext(), id));
+  return head;
 }
 
 // delete hash table and change updating status
