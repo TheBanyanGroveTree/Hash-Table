@@ -36,7 +36,7 @@ void addStudent(hashTable*&);
 void insert(hashTable*&, int, Student*);
 void rehash(hashTable*&);
 int countNodes(Node* head);
-void randomGenerator(hashTable*&, vector<string>&, vector<string>&);
+void randomGenerator(hashTable*&, vector<string>&, vector<string>&, int&);
 vector<string> readFile(vector<string>&, const string&);
 void printHashTable(hashTable*);
 void printLinkedList(Node* head);
@@ -65,6 +65,7 @@ int main() {
   */
 
   srand(time(0)); // Seed random number generator
+  int currRandomID = 400000; // Track to prevent repeats
   
   // Define const var for commands
   const string ADD = "ADD";
@@ -73,8 +74,7 @@ int main() {
   const string DELETE = "DELETE";
   const string QUIT = "QUIT";
 
-  // Declare str for user input
-  string userCommand = "";
+  string userCommand = ""; // Declare str for user input
 
   // Continue prompting user for input until QUIT command
   bool keepModifying = true;
@@ -100,7 +100,7 @@ int main() {
       if (userCommand.compare(ADD) == 0) {
 	addStudent(table);
       } else if (userCommand.compare(RANDOM) == 0) {
-	randomGenerator(table, firstNames, lastNames);
+	randomGenerator(table, firstNames, lastNames, currRandomID);
       } else if (userCommand.compare(PRINT) == 0) {
 	printHashTable(table);
       } else if (userCommand.compare(DELETE) == 0) {
@@ -232,7 +232,7 @@ int countNodes(Node* head) {
 
 // Randomly generate students
 void randomGenerator(hashTable*& table, vector<string>& firstNames,
-		     vector<string>& lastNames) {
+		     vector<string>& lastNames, int& randomID) {
   // prompt user for number of students to generate
   int numStudents = 0;
   cout << "Enter the number of students to generate: ";
@@ -244,7 +244,6 @@ void randomGenerator(hashTable*& table, vector<string>& firstNames,
   string firstName = "";
   int randomLNI = 0;
   string lastName = "";
-  int currID = 400000;
   double randomGPA = 0.0;
   for (int i = 0; i < numStudents; i++) {
     // generate random values
@@ -255,13 +254,13 @@ void randomGenerator(hashTable*& table, vector<string>& firstNames,
     randomGPA = ((double)rand() / RAND_MAX) * 4.0;
 
     // create new Student
-    Student* newStudent = new Student(firstName, lastName, currID, randomGPA);
+    Student* newStudent = new Student(firstName, lastName, randomID, randomGPA);
 
     // create new Node and insert into hash table
     insert(table, newStudent->getID(), newStudent);
 
     // increment ID
-    currID++;
+    randomID++;
   }
   
 }
@@ -320,6 +319,8 @@ void deleteStudentHashTable(hashTable*& table) {
   for (int i = 0; i < table->size; i++) {
     table->arr[i] = deleteStudentLinkedList(table->arr[i], userID);
   }
+
+  // can use hash function to find bucket instead of iteration
 }
 
 
@@ -349,6 +350,8 @@ void quitHashTable(hashTable* table, bool& keepModifying) {
     quitLinkedList(table->arr[i]);
   }
 
+  delete table;
+  
   keepModifying = false;
 }
 
