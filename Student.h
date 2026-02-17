@@ -9,11 +9,11 @@ using namespace std;
 class Student {
  public:
   Student(); // Default constructor
-  Student(string, string, int, float); // Constructor with parameters
+  Student(string, string, int, double); // Constructor with parameters
   string getFirstName(); // Get first name
   string getLastName(); // Get last name
   int getID(); // Get ID
-  float getGPA(); // Get GPA
+  double getGPA(); // Get GPA
   ~Student(); // Destructor
  private:
   string firstName;

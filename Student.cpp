@@ -11,7 +11,7 @@ Student::Student() {
   gpa = 0.0;
 }
 
-Student::Student(string firstName, string lastName, int id, float gpa) {
+Student::Student(string firstName, string lastName, int id, double gpa) {
   this->firstName = firstName;
   this->lastName = lastName;
   this->id = id;
@@ -30,7 +30,7 @@ int Student::getID() {
   return id;
 }
 
-float Student::getGPA() {
+double Student::getGPA() {
   return gpa;
 }
 

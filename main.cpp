@@ -1,7 +1,7 @@
 /**
    Description: Implement Student List using a hash table.
    Author: Aahana Sapra
-   Date: 2/3/2026
+   Date: 2/15/2026
  */
 
 #include <iostream>
@@ -14,24 +14,25 @@ using namespace std;
 
 // define hashTable struct
 struct hashTable {
-  int count; // number of elements
   int size; // number of elements it can hold
+  int count; // current number of elements
   Node** arr; // array of Node ptr
 };
 
 // define function prototypes
 void initializeHashTable(hashTable*, const int&);
 int hashFunction(hashTable*, const string&); // pass by ref for read-only
-void addStudent();
-void insert();
+void addStudent(hashTable*&);
+void insert(hashTable*&, const string&, Student*);
 void printStudentInfo();
 void deleteStudent();
 void quit();
 
 int main() {
-  // declare hash table
+  // initialize hash table
   hashTable* table = new hashTable();
   const int TABLE_SIZE = 100;
+  initializeHashTable(table, TABLE_SIZE);
   
   // define const var for commands
   const string ADD = "ADD";
@@ -63,7 +64,7 @@ int main() {
     } else {
       // call appropriate method or exit program
       if (userCommand.compare(ADD) == 0) {
-	
+	addStudent(table);
       } else if (userCommand.compare(PRINT) == 0) {
 	
       } else if (userCommand.compare(DELETE) == 0) {
@@ -79,8 +80,8 @@ int main() {
 
 // create new hash table
 void initializeHashTable(hashTable* table, const int& TABLE_SIZE) {
-  table->count = 0;
   table->size = TABLE_SIZE;
+  table->count = 0;
   // dynamically allocate memory and initialize to NULL 
   table->arr = new Node*[table->size]();
 }
@@ -92,14 +93,15 @@ int hashFunction(hashTable* table, const string& key) {
     sum += static_cast<int>(key[i]);
   }
 
-  return sum % table->size;
+  bucketIndex = sum % table->size;
+  return bucketIndex;
 }
 
 // create new student entry
-void addStudent() {
+void addStudent(hashTable*& table) {
   string firstName, lastName = "";
   int id = 0;
-  float gpa = 0.0;
+  double gpa = 0.0;
 
   // read in user input
   cout << "Enter the student's first name: ";
@@ -120,12 +122,30 @@ void addStudent() {
   Student* newStudent = new Student(firstName, lastName, id, gpa);
 
   // create new Node and insert into hash table
-  Node* newNode = new Node(newStudent);
+  // key = student last name
+  insert(table, newStudent->getLastName(), newStudent);
 }
 
 // insert new entry into hash table
-void insert() {
+void insert(hashTable*& table, const string& key, Student* newStudent) {
+  // determine bucket index for give key-val pair
+  int bucketIndex = hashFunction(table, key);
 
+  // create new Node
+  Node* newNode = new Node(newStudent);
+
+  // NO collision: empty bucket index
+  if (table->arr[bucketIndex] == NULL) {
+    table->arr[bucketIndex] = newNode;
+  }
+  // COLLISION: full bucket index
+  else {
+    // new Node becomes new head that points to old head (NO traversal)
+    newNode->setNext(table->arr[bucketIndex]);
+    table->arr[bucketIndex] = newNode;
+  }
+  
+  // TODO: add check for rehashing
 }
 
 // print entries stored in hash table
